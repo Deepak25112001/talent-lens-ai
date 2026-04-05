@@ -12,8 +12,7 @@ public class ResumeService {
             Tika tika = new Tika();
             return tika.parseToString(file.getInputStream());
         } catch (Exception e) {
-            e.printStackTrace();
-            return "Error parsing resume: " + e.getMessage();
+            throw new RuntimeException("Error parsing resume: " + e.getMessage());
         }
     }
-} 
+}
