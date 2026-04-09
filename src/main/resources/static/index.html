@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TalentLens AI</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 380px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555;
+        }
+
+        input[type="file"] {
+            margin: 15px 0;
+        }
+
+        button {
+            background: #4facfe;
+            border: none;
+            padding: 10px 15px;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #007bff;
+        }
+
+        .result-card {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .loader {
+            display: none;
+            margin-top: 10px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+    <h2>🚀 TalentLens AI</h2>
+    <p>Upload your resume and get insights</p>
+
+    <input type="file" id="fileInput">
+    <br>
+
+    <button onclick="uploadResume()">Analyze Resume</button>
+    <button onclick="downloadReport()">Download Report</button>
+
+    <div class="loader" id="loader">⏳ Processing...</div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+
+    let latestData = null;
+
+    async function uploadResume() {
+        const fileInput = document.getElementById("fileInput");
+        const loader = document.getElementById("loader");
+        const resultDiv = document.getElementById("result");
+
+        if (!fileInput.files.length) {
+            alert("Please select a file!");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        loader.style.display = "block";
+        resultDiv.innerHTML = "";
+
+        try {
+            const response = await fetch("http://localhost:8080/resume/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await response.json();
+            latestData = data;
+
+            loader.style.display = "none";
+
+            resultDiv.innerHTML = `
+            <div class="result-card">
+                <h3>📊 Resume Score: ${data.score}/100</h3>
+                <p><b>Skills:</b> ${data.skills.join(", ")}</p>
+                <p><b>Suggestions:</b> ${data.suggestions}</p>
+            </div>
+            `;
+
+        } catch (error) {
+            loader.style.display = "none";
+            resultDiv.innerHTML = "❌ Error connecting to server";
+        }
+    }
+
+    function downloadReport() {
+        if (!latestData) {
+            alert("Please analyze resume first!");
+            return;
+        }
+
+        const content = `
+    Resume Analysis Report
+
+    Score: ${latestData.score}/100
+    Skills: ${latestData.skills.join(", ")}
+    Suggestions: ${latestData.suggestions}
+        `;
+
+        const blob = new Blob([content], { type: "text/plain" });
+        const link = document.createElement("a");
+
+        link.href = URL.createObjectURL(blob);
+        link.download = "resume-report.txt";
+        link.click();
+    }
+
+</script>
+
+</body>
+</html>
